@@ -1,0 +1,205 @@
+<template>
+  <div class="page">
+    <text class="date">{{date}}</text>
+    <div class="stats">
+      <div class="stat">
+        <text class="stat-label">今日</text>
+        <text class="stat-num">{{count}}</text>
+      </div>
+      <div class="stat">
+        <text class="stat-label">总计</text>
+        <text class="stat-num">{{total}}</text>
+      </div>
+    </div>
+
+    <div class="fish" onclick="knock">
+      <image class="{{pressed ? 'fish-img-down' : 'fish-img'}}" src="/common/muyu.png"></image>
+    </div>
+    <text class="plus" show="{{pressed}}">功德 +1</text>
+
+    <div class="bar">
+      <div class="btn {{holding ? 'btn-hold' : ''}}" ontouchstart="resetStart" ontouchmove="resetMove" ontouchend="resetCancel">
+        <text class="btn-text">长按清零</text>
+      </div>
+      <div class="btn" onclick="openHistory">
+        <text class="btn-text">历史</text>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import router from '@system.router'
+import vibrator from '@system.vibrator'
+import { loadToday, saveToday, loadTotal, todayStr } from '../../common/store.js'
+import { holdStart, holdMove, holdCancel } from '../../common/hold.js'
+
+export default {
+  private: {
+    date: '',
+    count: 0,
+    total: 0,
+    pressed: false,
+    holding: false
+  },
+
+  onShow() {
+    this.refresh()
+  },
+
+  onHide() {
+    holdCancel(this, 'holding')
+  },
+
+  onDestroy() {
+    holdCancel(this, 'holding')
+    if (this._pressTimer) clearTimeout(this._pressTimer)
+  },
+
+  // 从存储重新读取；读取期间的敲击会等它完成，避免被旧值覆盖
+  refresh() {
+    if (!this._loading) {
+      this._loading = (async () => {
+        const today = await loadToday()
+        this.date = today.date
+        this.count = today.count
+        this.total = await loadTotal(today)
+      })().then(
+        () => (this._loading = null),
+        () => (this._loading = null)
+      )
+    }
+    return this._loading
+  },
+
+  // 等正在进行的读取完成；若应用开着过了零点，先归档昨天
+  async sync() {
+    if (this._loading) await this._loading
+    if (this.date !== todayStr()) await this.refresh()
+  },
+
+  async knock() {
+    await this.sync()
+    this.count += 1
+    this.total += 1
+    saveToday({ date: this.date, count: this.count })
+
+    vibrator.vibrate({ mode: 'short' })
+    this.pressed = true
+    if (this._pressTimer) clearTimeout(this._pressTimer)
+    this._pressTimer = setTimeout(() => {
+      this.pressed = false
+    }, 150)
+  },
+
+  resetStart(e) {
+    holdStart(this, 'holding', e, () => this.reset())
+  },
+
+  resetMove(e) {
+    holdMove(this, 'holding', e)
+  },
+
+  resetCancel() {
+    holdCancel(this, 'holding')
+  },
+
+  async reset() {
+    await this.sync()
+    // 清零今天的读数，总计同步扣掉今天的部分
+    this.total -= this.count
+    this.count = 0
+    saveToday({ date: this.date, count: 0 })
+    vibrator.vibrate({ mode: 'long' })
+  },
+
+  openHistory() {
+    router.push({ uri: '/pages/history' })
+  }
+}
+</script>
+
+<style>
+.page {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #000000;
+}
+
+.date {
+  font-size: 22px;
+  color: #888888;
+}
+
+.stats {
+  flex-direction: row;
+  margin-top: 10px;
+}
+
+.stat {
+  width: 140px;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 20px;
+  color: #aaaaaa;
+}
+
+.stat-num {
+  font-size: 48px;
+  color: #ffd27a;
+}
+
+.fish {
+  width: 226px;
+  height: 170px;
+  margin-top: 14px;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 按下时缩小一点，做出“敲下去”的感觉 */
+.fish-img {
+  width: 220px;
+  height: 170px;
+}
+
+.fish-img-down {
+  width: 198px;
+  height: 153px;
+}
+
+.plus {
+  font-size: 22px;
+  color: #ffd27a;
+  margin-top: 6px;
+}
+
+.bar {
+  flex-direction: row;
+  margin-top: 20px;
+}
+
+.btn {
+  width: 130px;
+  height: 52px;
+  margin-left: 8px;
+  margin-right: 8px;
+  border-radius: 26px;
+  background-color: #333333;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-hold {
+  background-color: #8a2a2a;
+}
+
+.btn-text {
+  font-size: 22px;
+  color: #ffffff;
+}
+</style>

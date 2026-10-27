@@ -1,0 +1,7 @@
+/.nyc_output
+/coverage
+/node_modules
+/dist
+/build
+/shot
+.DS_Store
