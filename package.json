@@ -1,7 +1,7 @@
 {
   "name": "band-muyu",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.0.1",
+  "description": "Merit wooden fish counter for Xiaomi Smart Band 10 Pro (Vela quick app)",
   "engines": {
     "node": ">=8.10"
   },

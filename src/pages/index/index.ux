@@ -18,7 +18,7 @@
     <text class="plus" show="{{pressed}}">功德 +1</text>
 
     <div class="bar">
-      <div class="btn {{holding ? 'btn-hold' : ''}}" ontouchstart="resetStart" ontouchmove="resetMove" ontouchend="resetCancel">
+      <div class="btn {{holding ? 'btn-hold' : ''}}" ontouchstart="resetStart" ontouchmove="resetMove" ontouchend="resetCancel" ontouchcancel="resetCancel">
         <text class="btn-text">长按清零</text>
       </div>
       <div class="btn" onclick="openHistory">

@@ -12,7 +12,7 @@
         <text class="c">{{$item.count}}</text>
       </list-item>
       <list-item type="clear" class="clear-row">
-        <div class="btn {{holding ? 'btn-hold' : ''}}" ontouchstart="wipeStart" ontouchmove="wipeMove" ontouchend="wipeCancel">
+        <div class="btn {{holding ? 'btn-hold' : ''}}" ontouchstart="wipeStart" ontouchmove="wipeMove" ontouchend="wipeCancel" ontouchcancel="wipeCancel">
           <text class="btn-text">长按清空历史</text>
         </div>
       </list-item>
